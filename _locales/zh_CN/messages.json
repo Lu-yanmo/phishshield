@@ -1,0 +1,12 @@
+{
+  "extName": {
+    "message": "PhishShield",
+    "description": "扩展名称"
+  },
+  "extDescription": {
+    "message": "在主流搜索引擎（Bing / 百度 / 搜狗 / 360 / Google / DuckDuckGo）的搜索结果中自动标记并隐藏疑似钓鱼/欺诈网站。基于本地启发式检测（仿冒域名、危险 TLD、诱导关键词）+ 黑名单/订阅列表，可选 Google Safe Browsing 增强。"
+  },
+  "extTitle": {
+    "message": "PhishShield — 搜索引擎钓鱼防护"
+  }
+}

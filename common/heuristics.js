@@ -154,7 +154,8 @@ const BPG_HEURISTICS = (function () {
    *   brandMatch, dangerousTld, ipDomain(structure), lureWords
    *   —— 对应 options 页的检测开关，默认全部开启
    * }
-   * 返回 { level, score, reasons: [ { text, weight } ] }
+   * 返回 { level, score, reasons: [ { weight, key, params } ] }
+   * reasons 采用 i18n 键 + 参数结构，由渲染方（content.js）按语言取文案
    */
   function runAnalysis(input, opts) {
     const o = Object.assign(
@@ -172,26 +173,26 @@ const BPG_HEURISTICS = (function () {
 
     const reasons = [];
     let score = 0;
-    const bump = (w, text) => {
+    const bump = (w, key, params) => {
       score = Math.min(100, score + w);
-      reasons.push({ weight: w, text });
+      reasons.push({ weight: w, key, params: params || null });
     };
-    const setMax = (w, text) => {
+    const setMax = (w, key, params) => {
       if (w > score) {
         score = Math.min(100, w);
-        reasons.push({ weight: w, text });
+        reasons.push({ weight: w, key, params: params || null });
       }
     };
 
     // ---- 0. 结构异常（开关：ipDomain）----
     if (o.ipDomain && /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
-      setMax(60, "域名本身是 IP 地址（而非正规域名），钓鱼站点常见手法");
+      setMax(60, "r.ip_domain");
     }
     if (o.ipDomain && !/^\d/.test(host) && host.length > 35) {
-      bump(10, "域名过长（" + host.length + " 字符），不像正常网站");
+      bump(10, "r.long_domain", { n: host.length });
     }
     if (o.ipDomain && (host.match(/-/g) || []).length > 2) {
-      bump(10, "域名连字符过多，疑似随机生成的欺诈域名");
+      bump(10, "r.many_hyphens");
     }
     // punycode / 同形字（多字节字符仿冒拉丁字母品牌）
     const hasNonAscii = /[^\x00-\x7F]/.test(host);
@@ -219,7 +220,7 @@ const BPG_HEURISTICS = (function () {
       if (b.domain.length >= 4 && host !== b.domain && host.startsWith(b.domain + ".")) {
         const rest = host.slice(b.domain.length + 1);
         if (!SAFE_AFTER_BRAND.has(rest)) {
-          setMax(90, "域名整体挂靠知名站点「" + b.domain + "」（如 " + host + "），常见于挂名钓鱼域名");
+          setMax(90, "r.brand_as_sub", { domain: b.domain, host });
           brandHit = true;
           break;
         }
@@ -227,7 +228,7 @@ const BPG_HEURISTICS = (function () {
       // hostname 中间穿插品牌：x.paypal.com.evil.xyz（品牌域名不是末尾结尾）
       if (b.domain.length >= 4 && host.indexOf(b.domain + ".") > 0 &&
           !host.endsWith("." + b.domain) && reg !== brandReg) {
-        setMax(90, "域名中间穿插了知名站点「" + b.domain + "」，常见于伪造品牌域名");
+        setMax(90, "r.brand_in_middle", { domain: b.domain });
         brandHit = true;
         break;
       }
@@ -237,7 +238,7 @@ const BPG_HEURISTICS = (function () {
       //   - 后缀正常（paypal.com.cn / paypal.co.uk）→ 视为品牌地区站，放行
       if (hostLabel === brandLabel) {
         if (DANGEROUS_TLDS.has(tld)) {
-          setMax(70, "以知名品牌「" + b.domain + "」为名注册的高危后缀域名（." + tld + "）");
+          setMax(70, "r.brand_tld", { domain: b.domain, tld });
           brandHit = true;
         }
         continue;
@@ -254,19 +255,19 @@ const BPG_HEURISTICS = (function () {
         continue;
       }
       if (brandLabel.length >= 4 && dist <= 1 && lenDiff <= 1) {
-        setMax(90, "域名「" + hostLabel + "」与知名站点「" + b.domain + "」拼写几乎相同（编辑距离 1）");
+        setMax(90, "r.brand_edit1", { label: hostLabel, domain: b.domain });
         brandHit = true;
         break;
       }
       if (brandLabel.length >= 4 && dist <= 2 && lenDiff <= 2) {
-        setMax(60, "域名「" + hostLabel + "」与知名站点「" + b.domain + "」拼写高度相似");
+        setMax(60, "r.brand_edit2", { label: hostLabel, domain: b.domain });
         brandHit = true;
         break;
       }
 
       // 1c. 字符混淆：p4ypal / am4zon
       if (hostLabel !== brandLabel && normalizeConfusable(hostLabel) === brandLabel) {
-        setMax(70, "域名「" + hostLabel + "」通过数字/字母替换伪造「" + b.domain + "」");
+        setMax(70, "r.brand_confusable", { label: hostLabel, domain: b.domain });
         brandHit = true;
         break;
       }
@@ -276,7 +277,7 @@ const BPG_HEURISTICS = (function () {
           (hostLabel.startsWith(brandLabel) || hostLabel.endsWith(brandLabel)) &&
           lenDiff >= 1 && lenDiff <= 6) {
         const plus = URL_LURE_RE.test(path) ? 65 : 55;
-        setMax(plus, "域名「" + hostLabel + "」是品牌「" + b.domain + "」的变体（追加/前置字符）");
+        setMax(plus, "r.brand_affix", { label: hostLabel, domain: b.domain });
         brandHit = true;
         break;
       }
@@ -297,7 +298,7 @@ const BPG_HEURISTICS = (function () {
         // 形态一：子域标签含软件名关键词（假官网最常见手法，强信号）
         const subHit = sw.keywords.find((kw) => subLabels.some((l) => labelHasKeyword(l, kw)));
         if (subHit) {
-          setMax(75, "子域名仿冒「" + sw.name + "」官方站点（含『" + subHit + "』但注册域并非官方），符合银狐木马假下载站特征");
+          setMax(75, "r.sf_sub", { name: sw.name, kw: subHit });
           brandHit = true;
           break;
         }
@@ -312,9 +313,7 @@ const BPG_HEURISTICS = (function () {
         if (hyphenHit) {
           const lure = SF_DOWNLOAD_LURE_RE.test(host) ||
             CN_DOWNLOAD_LURE_RE.test(title + " " + snippet);
-          setMax(lure ? 85 : 70,
-            "域名「" + hostLabel + "」用连字符拼接「" + sw.name + "」软件名（『" + hyphenHit + "』）但并非官方域名，是仿冒下载站的典型注册手法" +
-            (lure ? "，且附带下载/官网诱饵词" : ""));
+          setMax(lure ? 85 : 70, "r.sf_hyphen", { label: hostLabel, name: sw.name, kw: hyphenHit, lure: lure ? "r.lure_suffix" : "" });
           brandHit = true;
           break;
         }
@@ -330,9 +329,7 @@ const BPG_HEURISTICS = (function () {
           if (variantHit) {
             const lure = SF_DOWNLOAD_LURE_RE.test(host) ||
               CN_DOWNLOAD_LURE_RE.test(title + " " + snippet);
-            setMax(lure ? 85 : 75,
-              "域名「" + hostLabel + "」是「" + sw.name + "」的变体拼写（『" + variantHit + "』的一字之差仿冒），典型钓鱼域名构造手法" +
-              (lure ? "，且附带下载/官网诱饵词" : ""));
+            setMax(lure ? 85 : 75, "r.sf_variant", { label: hostLabel, name: sw.name, kw: variantHit, lure: lure ? "r.lure_suffix" : "" });
             brandHit = true;
             break;
           }
@@ -350,9 +347,7 @@ const BPG_HEURISTICS = (function () {
         if (labelHit) {
           const lure = SF_DOWNLOAD_LURE_RE.test(host) ||
             CN_DOWNLOAD_LURE_RE.test(title + " " + snippet);
-          setMax(lure ? 70 : 55,
-            "域名「" + hostLabel + "」嵌入「" + sw.name + "」软件名但并非官方域名，疑似仿冒下载站" +
-            (lure ? "，且附带下载/官网诱饵词" : ""));
+          setMax(lure ? 70 : 55, "r.sf_label", { label: hostLabel, name: sw.name, lure: lure ? "r.lure_suffix" : "" });
           brandHit = true;
           break;
         }
@@ -362,11 +357,11 @@ const BPG_HEURISTICS = (function () {
     // ---- 2. 危险 TLD 压制（开关：dangerousTld）----
     if (o.dangerousTld && DANGEROUS_TLDS.has(tld)) {
       if (brandHit) {
-        bump(30, "危险后缀 ." + tld + " + 仿冒品牌，钓鱼特征明显");
+        bump(30, "r.tld_brand", { tld });
       } else if (URL_LURE_RE.test(path) || CN_LURE_WORDS.some(w => allText.includes(w))) {
-        bump(40, "危险后缀 ." + tld + " 同时包含诱导关键词");
+        bump(40, "r.tld_lure", { tld });
       } else {
-        bump(20, "使用了风险较高的域名后缀 ." + tld);
+        bump(20, "r.tld_plain", { tld });
       }
     }
 
@@ -376,28 +371,28 @@ const BPG_HEURISTICS = (function () {
     // 单独不定性（正规国内企业大量使用 com.cn），仅在已命中仿冒信号时加权；
     // 官方品牌自身的 com.cn 域名在上方已放行（不会置位 brandHit）
     if (o.brandMatch && brandHit && /\.(com|net|org)\.cn$/.test(reg)) {
-      bump(15, "仿冒国内知名品牌/软件却注册在 ." + reg.split(".").slice(-2).join(".") + " 域名（针对国内产品的常见钓鱼手法）");
+      bump(15, "r.cn_suffix", { suffix: reg.split(".").slice(-2).join(".") });
     }
 
     // ---- 3. 诱导关键词（开关：lureWords）----
     if (o.lureWords) {
       if (URL_LURE_RE.test(path)) {
-        bump(25, "链接路径包含诱导关键词（如 login/verify/secure 等）");
+        bump(25, "r.url_lure");
       }
       // 下载链接直指压缩包：假下载站用压缩包包装木马载荷的典型手法，
       // 单独不足以定性（正规绿色版软件也用 zip），但与其他信号叠加后快速达阈
       if (ARCHIVE_PATH_RE.test(path)) {
-        bump(25, "下载链接直指压缩包（.zip/.rar/.7z），正规软件官网通常提供签名安装包而非压缩包");
+        bump(25, "r.archive_path");
       }
       if (CN_ARCHIVE_LURE_RE.test(allText)) {
-        bump(10, "页面文案引导下载压缩包（假下载站常见分发方式）");
+        bump(10, "r.archive_text");
       }
       if (URL_LURE_RE.test(title + " " + snippet)) {
-        bump(10, "页面标题/摘要包含英文诱导关键词");
+        bump(10, "r.title_lure_en");
       }
       for (const w of CN_LURE_WORDS) {
         if (allText.includes(w)) {
-          bump(15, "标题/摘要包含疑似欺诈话术（" + w + "）");
+          bump(15, "r.cn_lure_word", { word: w });
           break;
         }
       }
@@ -406,9 +401,9 @@ const BPG_HEURISTICS = (function () {
     // ---- 4. 同形字升级 ----
     if (hasNonAscii) {
       if (brandHit) {
-        bump(40, "域名包含非 ASCII 字符（punycode），是仿冒国际品牌的经典手法");
+        bump(40, "r.punycode_brand");
       } else {
-        bump(25, "域名包含非 ASCII 字符，注意核对是否为官方域名");
+        bump(25, "r.punycode_plain");
       }
     }
 

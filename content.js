@@ -29,6 +29,7 @@
   let config = Object.assign({}, DEFAULT_CONFIG);
   let hiddenCount = 0;           // 本页已隐藏数量（供统计写入）
   let markedCount = 0;           // 本页已标记数量
+  let lang = "zh";               // 界面语言，由配置 language 解析（auto 跟随浏览器）
 
   // 内置黑名单 → Set（按注册域精确匹配）
   const builtinSet = new Set(
@@ -276,12 +277,12 @@
 
   // ---------- 判定 ----------
 
-  // 命中内置/自定义/订阅黑名单 → danger
+  // 命中内置/自定义/订阅黑名单 → danger（返回来源信息，渲染时按语言取文案）
   function checkBlacklists(candidate, customSet, subHits) {
     const reg = BPG_HEURISTICS.getRegDomain(candidate.hostname);
-    if (builtinSet.has(reg)) return "内置黑名单";
-    if (customSet && customSet.has(reg)) return "自定义黑名单";
-    if (subHits && subHits[candidate.hostname]) return subHits[candidate.hostname];
+    if (builtinSet.has(reg)) return { source: "builtin" };
+    if (customSet && customSet.has(reg)) return { source: "custom" };
+    if (subHits && subHits[candidate.hostname]) return { source: "sub", list: subHits[candidate.hostname] };
     return null;
   }
 
@@ -292,8 +293,8 @@
       return {
         level: "danger",
         score: 100,
-        reasons: [{ weight: 100, text: "命中" + bl }],
-        blacklisted: bl
+        reasons: [{ weight: 100, key: "bl." + bl.source, params: bl.list ? { list: bl.list } : null }],
+        blacklisted: bl.source
       };
     }
     // 按设置开关裁剪信号源（通过传参控制）
@@ -320,6 +321,13 @@
 
   // ---------- 渲染 ----------
 
+  // 判定理由 → 当前语言文案（诱饵后缀是独立 i18n 键，拼接到主理由之后）
+  function reasonText(r) {
+    let text = bpgT(r.key, lang, r.params || undefined);
+    if (r.params && r.params.lure) text += bpgT(r.params.lure, lang);
+    return text;
+  }
+
   function renderResult(candidate, verdict, mode) {
     const item = candidate.item;
     const shouldHide = (mode === "hide_all" && verdict.level !== "safe") ||
@@ -331,20 +339,21 @@
       hiddenCount++;
     } else if (verdict.level !== "safe") {
       markedCount++;
-      // 多条理由只展示前 3 条
-      const reasonText = verdict.reasons.slice(0, 3).map((r) => r.text).join("；");
+      // 多条理由只展示前 3 条（按界面语言渲染）
+      const reasonText2 = verdict.reasons.slice(0, 3).map(reasonText).join("；");
       const bar = document.createElement("div");
       bar.className = "bpg-warning";
       bar.setAttribute("data-level", verdict.level);
       const title = document.createElement("div");
       title.className = "bpg-warning-title";
-      title.textContent = "⚠ " + (verdict.level === "danger" ? "高度疑似钓鱼网站" : "疑似钓鱼网站，请谨慎访问");
+      title.textContent = verdict.level === "danger" ? bpgT("warn.danger", lang) : bpgT("warn.suspicious", lang);
       const why = document.createElement("div");
       why.className = "bpg-warning-why";
-      why.textContent = "依据：" + reasonText + "（评分 " + verdict.score + "/100）";
+      why.textContent = bpgT("warn.reasonPrefix", lang) + reasonText2 +
+        bpgT("warn.score", lang, { score: verdict.score });
       const act = document.createElement("div");
       act.className = "bpg-warning-act";
-      act.textContent = "提示：若确认为误报，忽略本提示即可；谨慎起见请核对地址栏域名后再访问。";
+      act.textContent = bpgT("warn.tip", lang);
       bar.appendChild(title);
       bar.appendChild(why);
       bar.appendChild(act);
@@ -432,16 +441,18 @@
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // 初始化：读配置后开始扫描
+  // 初始化：读配置后解析语言并开始扫描
   chrome.storage.local.get(CONFIG_KEY, (data) => {
     if (data[CONFIG_KEY]) config = Object.assign(config, data[CONFIG_KEY]);
+    lang = bpgResolveLang(config.language);
     scanPending();
   });
 
-  // 配置变更时热更新
+  // 配置变更时热更新（含语言切换，立即按新语言重新渲染警告条）
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes[CONFIG_KEY]) {
       config = Object.assign({}, DEFAULT_CONFIG, changes[CONFIG_KEY].newValue);
+      lang = bpgResolveLang(config.language);
       // 重新处理当前页：先恢复被隐藏项并清除旧警告条
       document.querySelectorAll("[data-bpg-hidden]").forEach((it) => {
         it.style.display = "";

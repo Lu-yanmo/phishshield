@@ -150,34 +150,35 @@
 </head>
 <body>
   <div class="header">
-    <h1>PhishShield <span class="badge">运行中</span></h1>
-    <p class="desc">检测 Bing / 百度 / 搜狗 / 360 等搜索引擎结果中的疑似钓鱼网站</p>
+    <h1>PhishShield <span class="badge" data-i18n="popup.running">运行中</span></h1>
+    <p class="desc" data-i18n="popup.desc">检测 Bing / 百度 / 搜狗 / 360 等搜索引擎结果中的疑似钓鱼网站</p>
   </div>
 
   <div class="body">
     <div class="stats">
-      <div class="stat"><div class="num" id="sScanned">0</div><div class="label">已扫描</div></div>
-      <div class="stat warn"><div class="num" id="sMarked">0</div><div class="label">已标记</div></div>
-      <div class="stat hot"><div class="num" id="sHidden">0</div><div class="label">已隐藏</div></div>
+      <div class="stat"><div class="num" id="sScanned">0</div><div class="label" data-i18n="popup.scanned">已扫描</div></div>
+      <div class="stat warn"><div class="num" id="sMarked">0</div><div class="label" data-i18n="popup.marked">已标记</div></div>
+      <div class="stat hot"><div class="num" id="sHidden">0</div><div class="label" data-i18n="popup.hidden">已隐藏</div></div>
     </div>
 
     <div class="cfg">
-      <div class="row"><span class="k">拦截方式</span><span class="v" id="cMode">-</span></div>
-      <div class="row"><span class="k">灵敏度</span><span class="v" id="cSens">-</span></div>
+      <div class="row"><span class="k" data-i18n="popup.mode">拦截方式</span><span class="v" id="cMode">-</span></div>
+      <div class="row"><span class="k" data-i18n="popup.sens">灵敏度</span><span class="v" id="cSens">-</span></div>
     </div>
 
     <div class="btns">
-      <button id="btnOpenBing">测试搜索</button>
-      <button id="btnOptions">设置</button>
-      <button id="btnReset" title="清零统计">重置统计</button>
+      <button id="btnOpenBing" data-i18n="popup.btnTest">测试搜索</button>
+      <button id="btnOptions" data-i18n="popup.btnSettings">设置</button>
+      <button id="btnReset" title="清零统计" data-i18n="popup.btnReset" data-i18n-title="popup.resetTitle">重置统计</button>
     </div>
 
     <div class="foot">
-      <a id="linkOptions">打开完整设置 →</a>
+      <a id="linkOptions" data-i18n="popup.openFull">打开完整设置 →</a>
       <span class="since" id="since"></span>
     </div>
   </div>
 
+  <script src="common/i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

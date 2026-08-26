@@ -1,0 +1,12 @@
+{
+  "extName": {
+    "message": "PhishShield",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Automatically marks and hides suspected phishing/fraud websites in search results across major engines (Bing / Baidu / Sogou / 360 / Google / DuckDuckGo). Local heuristics (brand impersonation, dangerous TLDs, lure keywords) + blacklist/subscription feeds, with optional Google Safe Browsing."
+  },
+  "extTitle": {
+    "message": "PhishShield — Search Phishing Protection"
+  }
+}

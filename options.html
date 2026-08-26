@@ -170,95 +170,112 @@
 <body>
   <div class="banner">
     <h1>🛡 PhishShield</h1>
-    <p class="sub">检测并拦截 Bing / 百度 / 搜狗 / 360 / Google / DuckDuckGo 搜索结果中的疑似钓鱼网站 · 修改后点击底部「保存设置」生效</p>
+    <p class="sub" data-i18n="opt.banner">检测并拦截 Bing / 百度 / 搜狗 / 360 / Google / DuckDuckGo 搜索结果中的疑似钓鱼网站 · 修改后点击底部「保存设置」生效</p>
   </div>
 
   <main>
     <section>
-      <h2>拦截方式</h2>
+      <h2 data-i18n="opt.secMode">拦截方式</h2>
       <label class="row">
         <input type="radio" name="mode" value="mark" checked>
-        <span><b>仅标记</b>：在所有结果旁显示警告条，不隐藏任何结果</span>
+        <span data-i18n-html="opt.mode.mark"><b>仅标记</b>：在所有结果旁显示警告条，不隐藏任何结果</span>
       </label>
       <label class="row">
         <input type="radio" name="mode" value="hide_danger">
-        <span><b>隐藏高危并标记可疑</b>（推荐）：只隐藏明确判为钓鱼的结果</span>
+        <span data-i18n-html="opt.mode.hide_danger"><b>隐藏高危并标记可疑</b>（推荐）：只隐藏明确判为钓鱼的结果</span>
       </label>
       <label class="row">
         <input type="radio" name="mode" value="hide_all">
-        <span><b>全部隐藏</b>：所有可疑/高危结果一律隐藏（可展开）</span>
+        <span data-i18n-html="opt.mode.hide_all"><b>全部隐藏</b>：所有可疑/高危结果一律隐藏（可展开）</span>
       </label>
     </section>
 
     <section>
-      <h2>检测灵敏度</h2>
+      <h2 data-i18n="opt.secLang">显示语言</h2>
+      <label class="row">
+        <input type="radio" name="lang" value="auto" checked>
+        <span data-i18n-html="opt.lang.auto"><b>跟随浏览器</b>：按浏览器语言自动选择中文/英文</span>
+      </label>
+      <label class="row">
+        <input type="radio" name="lang" value="zh">
+        <span data-i18n-html="opt.lang.zh"><b>简体中文</b></span>
+      </label>
+      <label class="row">
+        <input type="radio" name="lang" value="en">
+        <span data-i18n-html="opt.lang.en"><b>English</b></span>
+      </label>
+    </section>
+
+    <section>
+      <h2 data-i18n="opt.secSens">检测灵敏度</h2>
       <label class="row">
         <input type="radio" name="sensitivity" value="low">
-        <span><b>低</b>：更保守，减少误报</span>
+        <span data-i18n-html="opt.sens.low"><b>低</b>：更保守，减少误报</span>
       </label>
       <label class="row">
         <input type="radio" name="sensitivity" value="medium" checked>
-        <span><b>中</b>：默认</span>
+        <span data-i18n-html="opt.sens.medium"><b>中</b>：默认</span>
       </label>
       <label class="row">
         <input type="radio" name="sensitivity" value="high">
-        <span><b>高</b>：拦截更多，误报可能增加</span>
+        <span data-i18n-html="opt.sens.high"><b>高</b>：拦截更多，误报可能增加</span>
       </label>
     </section>
 
     <section>
-      <h2>检测维度</h2>
+      <h2 data-i18n="opt.secDims">检测维度</h2>
       <label class="row">
         <input type="checkbox" id="chkBrand" checked>
-        <span>品牌仿冒检测（近似拼写、字符混淆、挂名域名、假下载站）</span>
+        <span data-i18n="opt.dim.brand">品牌仿冒检测（近似拼写、字符混淆、挂名域名、假下载站）</span>
       </label>
       <label class="row">
         <input type="checkbox" id="chkTld" checked>
-        <span>危险域名后缀（.top / .xyz / .tk 等高危 TLD）</span>
+        <span data-i18n="opt.dim.tld">危险域名后缀（.top / .xyz / .tk 等高危 TLD）</span>
       </label>
       <label class="row">
         <input type="checkbox" id="chkIp" checked>
-        <span>结构异常（IP 直连域名、超长域名、punycode 等）</span>
+        <span data-i18n="opt.dim.ip">结构异常（IP 直连域名、超长域名、punycode 等）</span>
       </label>
       <label class="row">
         <input type="checkbox" id="chkLure" checked>
-        <span>诱导关键词与压缩包分发（login/verify/客服/退款、.zip/.rar 载荷等）</span>
+        <span data-i18n="opt.dim.lure">诱导关键词与压缩包分发（login/verify/客服/退款、.zip/.rar 载荷等）</span>
       </label>
     </section>
 
     <section>
-      <h2>自定义黑名单</h2>
-      <p class="hint">每行一个域名（可含子域）。命中即视为危险并隐藏。示例：fake-login.xyz</p>
+      <h2 data-i18n="opt.secCustom">自定义黑名单</h2>
+      <p class="hint" data-i18n="opt.customHint">每行一个域名（可含子域）。命中即视为危险并隐藏。示例：fake-login.xyz</p>
       <textarea id="customList" placeholder="fake-login.xyz&#10;paypal-verify.top"></textarea>
     </section>
 
     <section>
-      <h2>订阅黑名单（远程列表）</h2>
-      <p class="hint">
+      <h2 data-i18n="opt.secSub">订阅黑名单（远程列表）</h2>
+      <p class="hint" data-i18n="opt.subHint">
         定期从以下地址抓取域名列表（支持纯文本域名列表或 hosts 文件格式），与本地检测互为补充。
         已内置三个大型公开黑名单（合计约 50 万活跃钓鱼域名，每日自动更新）；
         若某源拉取缓慢或不可用，可在 URL 前加 # 注释掉。首次保存设置后开始抓取。
       </p>
       <div id="subRows"></div>
-      <button type="button" class="ghost small" id="addSub">+ 添加订阅源</button>
+      <button type="button" class="ghost small" id="addSub" data-i18n="opt.subAdd">+ 添加订阅源</button>
       <div id="subStatus"></div>
     </section>
 
     <section>
-      <h2>Google Safe Browsing（可选增强）</h2>
-      <p class="hint">
+      <h2 data-i18n="opt.secSb">Google Safe Browsing（可选增强）</h2>
+      <p class="hint" data-i18n="opt.sbHint">
         填入你自己的 Google Safe Browsing API Key 后，将额外通过 Google 云端威胁情报对结果做二次核验。
         申请地址：console.cloud.google.com（启用 Safe Browsing API 并创建凭证）。留空则只使用本地检测。
       </p>
-      <input type="text" id="sbKey" placeholder="AIza...（可留空）" autocomplete="off">
+      <input type="text" id="sbKey" placeholder="AIza...（可留空）" data-i18n-ph="opt.sbPh" autocomplete="off">
     </section>
   </main>
 
   <div class="actions">
-    <button type="button" class="primary" id="saveBtn">保存设置</button>
+    <button type="button" class="primary" id="saveBtn" data-i18n="opt.save">保存设置</button>
     <span id="saveTip"></span>
   </div>
 
+  <script src="common/i18n.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

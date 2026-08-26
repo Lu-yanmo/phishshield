@@ -1,16 +1,12 @@
 // ============================================================
 // Popup 弹窗逻辑：展示配置与统计，提供快捷操作
+// 文案全部走 common/i18n.js 双语字典，语言跟随配置（auto/zh/en）
 // ============================================================
 
 (function () {
   "use strict";
 
-  const MODE_TEXT = {
-    mark: "仅标记",
-    hide_danger: "隐藏高危 + 标记可疑",
-    hide_all: "全部隐藏"
-  };
-  const SENS_TEXT = { low: "低（保守）", medium: "中（默认）", high: "高（激进）" };
+  let lang = bpgResolveLang(); // 先用浏览器语言填充，拿到配置后若指定了语言则重填
 
   function fill() {
     // 统计
@@ -20,14 +16,19 @@
       document.getElementById("sMarked").textContent = s.marked;
       document.getElementById("sHidden").textContent = s.hidden;
       const since = document.getElementById("since");
-      since.textContent = "自 " + new Date(s.since).toLocaleDateString() + " 起";
+      since.textContent = bpgT("popup.since", lang, { date: new Date(s.since).toLocaleDateString() });
     });
 
-    // 配置摘要
+    // 配置摘要（含语言偏好：配置指定语言时重刷全文案）
     chrome.runtime.sendMessage({ type: "getConfig" }, (cfg) => {
       cfg = cfg || {};
-      document.getElementById("cMode").textContent = MODE_TEXT[cfg.mode] || "-";
-      document.getElementById("cSens").textContent = SENS_TEXT[cfg.sensitivity] || "-";
+      const newLang = bpgResolveLang(cfg.language);
+      if (newLang !== lang) {
+        lang = newLang;
+        bpgApplyDom(lang);
+      }
+      document.getElementById("cMode").textContent = bpgT("mode." + (cfg.mode || ""), lang) || "-";
+      document.getElementById("cSens").textContent = bpgT("sens." + (cfg.sensitivity || ""), lang) || "-";
     });
   }
 
@@ -48,5 +49,6 @@
     });
   });
 
+  bpgApplyDom(lang);
   fill();
 })();
