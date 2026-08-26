@@ -1,0 +1,15 @@
+# 构建/发布产物
+*.zip
+*.crx
+*.pem
+
+# 临时文件
+_test_*
+_gen_*
+_verify_*
+
+# 系统与编辑器
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

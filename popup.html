@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>PhishShield</title>
+  <style>
+    :root {
+      --brand: #2563eb;
+      --brand-deep: #1e3a8a;
+      --danger: #e74c3c;
+      --ok: #27ae60;
+      --ink: #1f2937;
+      --ink-sub: #6b7280;
+      --line: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      width: 320px;
+      margin: 0;
+      color: var(--ink);
+      background: #f6f8fb;
+    }
+    /* —— 品牌头部 —— */
+    .header {
+      background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 60%, #3b82f6 100%);
+      color: #fff;
+      padding: 14px 16px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      /* 装饰性盾牌光晕 */
+      content: "🛡";
+      position: absolute;
+      right: -6px;
+      top: -14px;
+      font-size: 72px;
+      opacity: 0.14;
+      transform: rotate(12deg);
+    }
+    .header h1 {
+      font-size: 15px;
+      margin: 0 0 3px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .badge {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 1px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 400;
+    }
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    .header .desc {
+      font-size: 11px;
+      opacity: 0.85;
+      margin: 0;
+    }
+    /* —— 主体 —— */
+    .body { padding: 12px 14px 14px; }
+    .stats { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stat {
+      flex: 1;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 6px 8px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .stat:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(16, 24, 40, 0.1); }
+    .stat .num { font-size: 20px; font-weight: 700; color: var(--brand); line-height: 1.2; }
+    .stat.warn .num { color: #f59e0b; }
+    .stat.hot .num { color: var(--danger); }
+    .stat .label { font-size: 11px; color: var(--ink-sub); margin-top: 3px; }
+    /* —— 配置摘要 —— */
+    .cfg {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 4px 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 7px 0;
+    }
+    .row + .row { border-top: 1px dashed var(--line); }
+    .row .k { color: var(--ink-sub); }
+    .row .v { color: var(--ink); font-weight: 600; }
+    /* —— 按钮 —— */
+    .btns { display: flex; gap: 8px; }
+    button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 0;
+      font-size: 12px;
+      cursor: pointer;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    button:hover { background: #f3f4f6; }
+    button:active { transform: scale(0.97); }
+    button.primary {
+      background: linear-gradient(135deg, #ef4444, var(--danger));
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 6px rgba(231, 76, 60, 0.35);
+    }
+    button.primary:hover { filter: brightness(1.06); background: linear-gradient(135deg, #ef4444, var(--danger)); }
+    /* —— 页脚 —— */
+    .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .foot a {
+      font-size: 12px;
+      color: var(--brand);
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .foot a:hover { text-decoration: underline; }
+    .since { font-size: 10px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PhishShield <span class="badge">运行中</span></h1>
+    <p class="desc">检测 Bing / 百度 / 搜狗 / 360 等搜索引擎结果中的疑似钓鱼网站</p>
+  </div>
+
+  <div class="body">
+    <div class="stats">
+      <div class="stat"><div class="num" id="sScanned">0</div><div class="label">已扫描</div></div>
+      <div class="stat warn"><div class="num" id="sMarked">0</div><div class="label">已标记</div></div>
+      <div class="stat hot"><div class="num" id="sHidden">0</div><div class="label">已隐藏</div></div>
+    </div>
+
+    <div class="cfg">
+      <div class="row"><span class="k">拦截方式</span><span class="v" id="cMode">-</span></div>
+      <div class="row"><span class="k">灵敏度</span><span class="v" id="cSens">-</span></div>
+    </div>
+
+    <div class="btns">
+      <button id="btnOpenBing">测试搜索</button>
+      <button id="btnOptions">设置</button>
+      <button id="btnReset" title="清零统计">重置统计</button>
+    </div>
+
+    <div class="foot">
+      <a id="linkOptions">打开完整设置 →</a>
+      <span class="since" id="since"></span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

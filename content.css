@@ -1,0 +1,42 @@
+/* ============================================================
+   Bing 钓鱼网站卫士 —— 页面注入样式
+   ============================================================ */
+
+/* 结果内的警告条 */
+.bpg-warning {
+  margin: 6px 0 10px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(231, 76, 60, 0.45);
+  border-left: 4px solid #e74c3c;
+  background: linear-gradient(135deg, #fef2f2, #fdecea);
+  color: #922b21;
+  font-size: 13px;
+  line-height: 1.6;
+  box-shadow: 0 1px 4px rgba(231, 76, 60, 0.12);
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+.bpg-warning[data-level="suspicious"] {
+  border-color: rgba(243, 156, 18, 0.45);
+  border-left-color: #f39c12;
+  background: linear-gradient(135deg, #fffbeb, #fef5e7);
+  color: #9a6612;
+  box-shadow: 0 1px 4px rgba(243, 156, 18, 0.12);
+}
+
+.bpg-warning-title {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.bpg-warning-why {
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.bpg-warning-act {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}

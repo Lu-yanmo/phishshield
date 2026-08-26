@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "PhishShield",
+  "short_name": "PhishShield",
+  "version": "1.3.0",
+  "description": "在主流搜索引擎（Bing / 百度 / 搜狗 / 360 / Google / DuckDuckGo）的搜索结果中自动标记并隐藏疑似钓鱼/欺诈网站。基于本地启发式检测（仿冒域名、危险 TLD、诱导关键词）+ 黑名单/订阅列表，可选 Google Safe Browsing 增强。",
+  "permissions": ["storage", "alarms", "unlimitedStorage"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "host_permissions": [
+    "https://www.bing.com/*",
+    "https://cn.bing.com/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bing.com/*",
+        "https://cn.bing.com/*",
+        "https://bing.com/*",
+        "https://www.baidu.com/*",
+        "https://www.sogou.com/*",
+        "https://www.so.com/*",
+        "https://www.google.com/*",
+        "https://google.com/*",
+        "https://www.google.com.hk/*",
+        "https://duckduckgo.com/*"
+      ],
+      "css": ["content.css"],
+      "js": [
+        "common/blacklist.js",
+        "common/brands.js",
+        "common/heuristics.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PhishShield — 搜索引擎钓鱼防护",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+}
