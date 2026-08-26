@@ -1,185 +1,187 @@
 # PhishShield 🛡
 
+**English** | [简体中文](README.zh-CN.md)
+
 [![Release](https://img.shields.io/github/v/release/Lu-yanmo/phishshield)](https://github.com/Lu-yanmo/phishshield/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Chrome-MV3-green)](https://developer.chrome.com/docs/extensions/mv3/)
 
-在主流搜索引擎的搜索结果中，自动**标记并隐藏**疑似钓鱼/欺诈网站。
+Automatically **marks and hides** suspected phishing / fraudulent websites in search engine results.
 
-支持引擎：**Bing / 百度 / 搜狗 / 360 搜索 / Google / DuckDuckGo**
+Supported engines: **Bing / Baidu / Sogou / 360 Search / Google / DuckDuckGo**
 
-## 为什么需要它
+## Why It Exists
 
-在搜索引擎搜「XX官网」「XX下载」「XX客服」时，前排结果（甚至竞价广告位）常混入仿冒官网的钓鱼站点：
+When you search for "XX official site", "XX download" or "XX support", the top results (even paid ad slots) are often polluted with lookalike phishing sites:
 
-- 🎣 域名一字之差：`deepseek-com.com.cn` 冒充 DeepSeek、`gf-sougoui.com.cn` 冒充搜狗
-- 📦 诱导下载带木马的压缩包（银狐木马的典型分发方式）
-- 🔑 伪造登录页骗取账号密码、伪造客服页骗取验证码
+- 🎣 Typosquatted domains: `deepseek-com.com.cn` impersonating DeepSeek, `gf-sougoui.com.cn` impersonating Sogou
+- 📦 Luring downloads of trojanized archives (a typical distribution method of the Silver Fox trojan)
+- 🔑 Fake login pages stealing credentials, fake support pages stealing verification codes
 
-PhishShield 在你点开链接之前，先把这些结果标出来或直接隐藏，为访问前增加一道防线。
+PhishShield flags or hides these results **before you click**, adding one more line of defense.
 
-## 核心特性
+## Key Features
 
-- ✅ **六大搜索引擎全覆盖** —— 同一套检测引擎，跨引擎行为一致
-- ✅ **四层检测** —— 黑名单、启发式评分、订阅情报、Safe Browsing（可选）
-- ✅ **全部本地执行** —— 不收集、不上传任何搜索词与浏览数据
-- ✅ **三种处置模式** —— 标记 / 隐藏危险 / 全部隐藏，可随时切换
-- ✅ **开箱即用 + 可定制** —— 内置黑名单与品牌库持续积累，支持自定义黑名单与订阅源
+- ✅ **Six search engines covered** — one detection engine, consistent behavior everywhere
+- ✅ **Four detection layers** — blacklist, heuristic scoring, subscription feeds, Safe Browsing (optional)
+- ✅ **100% local execution** — no search terms or browsing data are ever collected or uploaded
+- ✅ **Three action modes** — mark only / hide dangerous / hide all, switchable anytime
+- ✅ **Works out of the box, fully customizable** — built-in blacklist & brand DB keep growing; custom blacklists and feed sources supported
 
-## 检测机制
+## Detection Layers
 
-每个搜索结果按以下四层顺序判定，命中即定性：
+Each search result is judged through four layers in order; the first hit decides:
 
-### 第 1 层：内置黑名单
+### Layer 1: Built-in Blacklist
 
-已人工确认的钓鱼域名（按注册域精确匹配），如银狐木马分发站、仿冒下载站等，持续积累于 `common/blacklist.js`。
+Manually confirmed phishing domains (matched by registrable domain), e.g. trojan distribution sites and fake download portals, continuously accumulated in `common/blacklist.js`.
 
-### 第 2 层：启发式评分引擎（核心）
+### Layer 2: Heuristic Scoring Engine (core)
 
-对域名的多个维度打分（满分 100，≥70 危险，≥40 可疑），主要规则：
+Scores domains across multiple dimensions (max 100; ≥70 dangerous, ≥40 suspicious). Main rules:
 
-| 规则 | 说明 | 示例 |
+| Rule | Description | Example |
 |---|---|---|
-| 品牌仿冒 | 编辑距离、连字符拼接、一字之差的变体拼写识别，覆盖 170+ 品牌与 67 款高频被仿冒软件 | `wps-downlod.com`、`xunlei-app.com` |
-| 国内后缀组合 | 仿冒知名品牌 + `.com.cn/.net.cn/.org.cn` 两段式后缀加权 | `ludashi-down.com.cn` |
-| 高危域名特征 | IP 直连、危险 TLD、过长随机子域 | `192.168.1.1-login.xyz` |
-| 诱饵词识别 | 假「官网/下载/客服/破解版」文案、压缩包分发（`.zip/.rar/.7z`） | 「XX官网免费下载」→ 下载实为压缩包 |
+| Brand impersonation | Edit distance, hyphen concatenation, one-letter-off variant spellings; covers 170+ brands and 67 frequently impersonated apps | `wps-downlod.com`, `xunlei-app.com` |
+| CN-suffix combo | Impersonating a known brand + two-part `.com.cn/.net.cn/.org.cn` suffix gets extra weight | `ludashi-down.com.cn` |
+| High-risk domain traits | Raw IP hosts, dangerous TLDs, overly long random subdomains | `192.168.1.1-login.xyz` |
+| Lure wording | Fake "official/download/support/cracked" copy, archive distribution (`.zip/.rar/.7z`) | "Official site free download" → the file is actually an archive |
 
-同时内置多重**防误报机制**：官方域名白名单早退、短缩写（≤4 字符）跳过编辑距离比对、知名平台域兜底放行等。
+Multiple **false-positive guards** are built in: official-domain early exit, short abbreviations (≤4 chars) skip edit-distance comparison, well-known platform domains are always allowed through.
 
-### 第 3 层：订阅黑名单（每日更新）
+### Layer 3: Subscription Blacklists (daily updates)
 
-后台定时拉取公开钓鱼域名情报源，累计数十万条：
+The background worker periodically pulls public phishing-domain feeds, totaling hundreds of thousands of entries:
 
 - [Phishing Army](https://phishing.army/)
 - [malware-filter](https://gitlab.com/malware-filter/phishing-filter)
 - [Phishing.Database](https://github.com/mitchellkrogza/Phishing.Database)
 
-### 第 4 层：Google Safe Browsing（可选）
+### Layer 4: Google Safe Browsing (optional)
 
-在设置页填入 API Key 后，对可疑 URL 追加云端校验。
+Enter an API key in the options page to add cloud verification for suspicious URLs.
 
-## 运行逻辑
+## How It Works
 
-扩展由**内容脚本**（搜索结果页）与 **Service Worker**（后台）两部分协作，数据统一存放在 `chrome.storage.local`：
+The extension is a collaboration between the **content script** (search result pages) and the **service worker** (background), with all data stored in `chrome.storage.local`:
 
-- **内容脚本**：页面加载 → 按域名选择引擎适配器 → 提取结果真实地址 → 黑名单判定 →（未命中时）启发式评分 → 按阈值分级（≥70 危险 / 40~69 可疑 / 其余安全）→ 按模式隐藏或插入警告条；订阅黑名单通过消息批量向后台查询。
-- **Service Worker**：定时器触发 → 拉取 3 个订阅源 → 解析为换行分隔字符串存入 `storage.local`（数十万条）→ 内存缓存（按 `updatedAt` 失效）→ 对外提供 `queryDomains` 查询服务。
+- **Content script**: page load → pick engine adapter by hostname → extract the real destination URL → blacklist check → (on miss) heuristic scoring → classify by threshold (≥70 dangerous / 40–69 suspicious / otherwise safe) → hide or insert a warning bar depending on mode; subscription blacklist hits are queried from the worker in one batch.
+- **Service worker**: alarm triggers → fetch the 3 feeds → parse into newline-separated strings stored in `storage.local` (hundreds of thousands of entries) → in-memory cache (invalidated by `updatedAt`) → expose the `queryDomains` query service.
 
-### 内容脚本：扫描流水线（content.js）
+### Content Script: Scan Pipeline (content.js)
 
-1. **引擎适配**：按当前域名选择适配器（Bing/百度/搜狗/360/Google/DDG），未适配站点不启动；各适配器负责解出结果项的**真实目标地址**——Bing 解 base64url 跳转参数、百度取 `mu` 属性、搜狗/360 回退页面展示的域名文字、DDG 解 `uddg` 参数
-2. **增量扫描**：`MutationObserver` 监听滚动加载的新结果，防抖 300ms 后补扫；每个节点用 `data-bpg-done` 标记防重复处理，滚动加载多少都能覆盖
-3. **批量判定**：本页新增结果一次性发给后台查订阅黑名单（避免逐条消息开销），再走本地黑名单与启发式评分；统计结果写入 `storage` 供弹窗展示
-4. **热更新**：监听设置变更，立即恢复被隐藏项、清除旧警告条，全页重新判定，无需刷新页面
+1. **Engine adapters**: chosen by current hostname (Bing/Baidu/Sogou/360/Google/DDG); unsupported sites are ignored. Each adapter resolves the **real destination URL** — Bing decodes base64url redirect params, Baidu reads the `mu` attribute, Sogou/360 fall back to the displayed domain text on the page, DDG decodes the `uddg` parameter.
+2. **Incremental scan**: a `MutationObserver` watches for newly loaded results and rescans after a 300ms debounce; each node is marked with `data-bpg-done` to avoid reprocessing, so infinite scroll is fully covered.
+3. **Batched verdicts**: newly found results on the page are sent to the worker in a single message for subscription lookup (avoiding per-item message overhead), then checked against local blacklists and the heuristic engine; statistics are written to `storage` for the popup.
+4. **Hot reload**: setting changes immediately restore hidden items, remove old warning bars and re-judge the whole page — no refresh needed.
 
-### Service Worker：情报与查询（background.js）
+### Service Worker: Intelligence & Queries (background.js)
 
-1. **定时拉取**：通过 `alarms` 每日更新三个订阅源（单源超时 60s，容忍大文件波动）
-2. **压缩存储**：黑名单以换行分隔字符串存储（比 JSON 数组省约 1/3 空间），配合 `unlimitedStorage` 权限容纳数十万条；首次安装自动迁移失效源配置
-3. **内存缓存**：按 `updatedAt` 失效，避免每次查询重复反序列化；查询复杂度 O(1)
-4. **版本兼容**：配置项采用默认值合并策略，升级后旧配置不丢失
+1. **Scheduled fetch**: `alarms` updates the three feeds daily (60s timeout per source, tolerant of large-file fluctuations).
+2. **Compact storage**: blacklists are stored as newline-separated strings (~1/3 smaller than JSON arrays); the `unlimitedStorage` permission accommodates hundreds of thousands of entries; stale feed sources are migrated automatically on first install.
+3. **In-memory cache**: invalidated by `updatedAt` to avoid repeated deserialization; lookups are O(1).
+4. **Version compatibility**: config uses a merge-with-defaults strategy, so old settings survive upgrades.
 
-## 处置模式
+## Action Modes
 
-| 模式 | 行为 |
+| Mode | Behavior |
 |---|---|
-| 仅标记 | 危险/可疑结果保留在结果页，顶部加醒目警告条（含判定依据与评分） |
-| 隐藏危险（默认） | 危险结果直接隐藏，可疑结果标记 |
-| 全部隐藏 | 隐藏所有非安全结果 |
+| Mark only | Dangerous/suspicious results stay visible with a prominent warning bar (including verdict reasons and score) |
+| Hide dangerous (default) | Dangerous results are hidden; suspicious ones are marked |
+| Hide all | Every non-safe result is hidden |
 
-灵敏度可调节（低/中/高），对应不同的评分阈值。
+Sensitivity is adjustable (low/medium/high), mapping to different score thresholds.
 
-## 安装
+## Installation
 
-### 方式一：开发者模式加载（当前）
+### Option 1: Load Unpacked (current)
 
-1. 从 [Releases](https://github.com/Lu-yanmo/phishshield/releases) 下载最新 zip 并解压
-2. 打开 `chrome://extensions`，开启右上角「开发者模式」
-3. 点击「加载已解压的扩展程序」，选择解压后的目录
-4. 到任意支持的搜索引擎搜索，即自动生效
+1. Download the latest zip from [Releases](https://github.com/Lu-yanmo/phishshield/releases) and extract it
+2. Open `chrome://extensions` and enable "Developer mode" (top right)
+3. Click "Load unpacked" and select the extracted folder
+4. Search on any supported engine — protection kicks in automatically
 
-> 首次启动后请稍等片刻，后台会自动下载订阅黑名单（约 10MB）。
+> Give it a moment after first launch: the background worker downloads the subscription blacklists (~10MB) automatically.
 
-### 方式二：Edge 浏览器
+### Option 2: Microsoft Edge
 
-Edge 兼容 Chrome 扩展，同样通过「加载解压缩的扩展」安装，或后续上架 Edge 加载项后直接安装。
+Edge is compatible with Chrome extensions — install via "Load unpacked" the same way, or install directly once published on Edge Add-ons.
 
-## 使用说明
+## Usage
 
-### 工具栏弹窗
+### Toolbar Popup
 
-点击工具栏图标可查看：本页已扫描/已标记/已隐藏数量、快速切换处置模式与灵敏度、一键打开测试搜索。
+Click the toolbar icon to see: scanned/marked/hidden counts for the current page, quick switching of action mode and sensitivity, and a one-click test search.
 
-### 设置页
+### Options Page
 
-右键图标 → 选项，或点击弹窗底部「高级设置」：
+Right-click the icon → Options, or click "Advanced settings" at the bottom of the popup:
 
-- **检测开关**：品牌仿冒、危险 TLD、IP 域名、诱饵词四项可独立开关
-- **自定义黑名单**：每行一个域名，加入后即刻生效
-- **订阅源管理**：可增删情报源地址、手动刷新
-- **Safe Browsing**：填入 Google API Key 启用云端增强
+- **Detection toggles**: brand impersonation, dangerous TLDs, IP domains and lure wording can each be switched independently
+- **Custom blacklist**: one domain per line, takes effect immediately
+- **Feed management**: add/remove intelligence sources, refresh manually
+- **Safe Browsing**: enter a Google API key to enable cloud verification
 
-### 结果页警告条
+### Warning Bars
 
-被标记的结果顶部会显示分级警告条：
+Marked results show a graded warning bar on top:
 
-- 🔴 **高度疑似钓鱼网站**：列出判定依据与评分（如「命中内置黑名单」「仿冒 DeepSeek 官网域名」）
-- 🟡 **疑似钓鱼网站**：提示谨慎访问
+- 🔴 **Highly suspected phishing site**: lists the verdict reasons and score (e.g. "hit built-in blacklist", "impersonates the DeepSeek domain")
+- 🟡 **Suspected phishing site**: advises caution
 
-修改设置后当前页会即时重新判定，无需刷新。
+Changing settings re-judges the current page instantly — no refresh needed.
 
-## 目录结构
+## Project Structure
 
 ```
-├── manifest.json             # MV3 清单（六大引擎匹配规则）
-├── background.js             # Service Worker：订阅源拉取、黑名单查询、SB 增强
-├── content.js                # 多引擎适配器 + 结果扫描/标记/隐藏
-├── content.css               # 警告条样式
-├── popup.html / popup.js     # 工具栏弹窗（统计与快捷开关）
-├── options.html / options.js # 设置页（模式、灵敏度、自定义黑名单、订阅源）
-├── icons/                    # 16/32/48/128 四尺寸图标
+├── manifest.json             # MV3 manifest (six-engine match rules)
+├── background.js             # Service worker: feed fetching, blacklist queries, SB enhancement
+├── content.js                # Multi-engine adapters + scan/mark/hide
+├── content.css               # Warning bar styles
+├── popup.html / popup.js     # Toolbar popup (stats & quick toggles)
+├── options.html / options.js # Options page (mode, sensitivity, custom blacklist, feeds)
+├── icons/                    # 16/32/48/128 px icons
 └── common/
-    ├── blacklist.js          # 内置钓鱼域名黑名单（44+ 条，持续积累）
-    ├── brands.js             # 品牌库（170+ 品牌）与软件清单（67 款）
-    └── heuristics.js         # 启发式评分引擎（域名形态/诱饵词/后缀组合）
+    ├── blacklist.js          # Built-in phishing domain blacklist (44+ entries, growing)
+    ├── brands.js             # Brand DB (170+ brands) & software list (67 apps)
+    └── heuristics.js         # Heuristic scoring engine (domain shapes / lures / suffix combos)
 ```
 
-## 参与贡献
+## Contributing
 
-欢迎通过 Issue 与 PR 参与：
+Issues and PRs are welcome:
 
-- 🐛 **报告漏检**：提 Issue 并附上钓鱼域名与搜索引擎截图，我们会分析其特征并加入黑名单或规则
-- 🚫 **报告误报**：同上，附上被误判的正规网站域名
-- ➕ **扩充品牌库**：在 `common/brands.js` 的 `BPG_BRANDS`（品牌）或 `BPG_SOFTWARE_TARGETS`（软件，需带 `keywords` 与 `official` 字段）中补充条目
-- 🌐 **适配新引擎**：在 `content.js` 的 `detectEngine()` 中新增一个引擎适配器即可，核心检测逻辑无需改动
+- 🐛 **Report misses**: open an issue with the phishing domain and a screenshot of the search results; we'll analyze its traits and add it to the blacklist or rules
+- 🚫 **Report false positives**: same format, with the legitimate domain that was wrongly flagged
+- ➕ **Extend the brand DB**: add entries to `BPG_BRANDS` (brands) or `BPG_SOFTWARE_TARGETS` (software, requires `keywords` and `official` fields) in `common/brands.js`
+- 🌐 **Adapt a new engine**: just add an adapter in `detectEngine()` of `content.js` — the core detection logic needs no changes
 
-> 提示：扩充品牌关键词时请注意防互伤——短缩写（≤4 字符）不做编辑距离比对，正规品牌官方域会自动早退放行。
+> Tip: when extending brand keywords, beware of cross-brand collisions — short abbreviations (≤4 chars) never undergo edit-distance comparison, and official domains of legitimate brands exit early as safe.
 
-## 隐私
+## Privacy
 
-- 所有检测在本地完成，不收集、不上传搜索词、点击记录或任何浏览数据
-- 唯一网络请求：定时下载公开黑名单列表；启用 Safe Browsing 后，可疑 URL 会以哈希形式提交 Google 校验
-- 统计数据仅存于本机 `chrome.storage.local`
+- All detection runs locally; search terms, clicks and browsing data are never collected or uploaded
+- The only network requests: scheduled downloads of public blacklist feeds; with Safe Browsing enabled, suspicious URLs are submitted to Google as hashes
+- Statistics live only in local `chrome.storage.local`
 
-## 常见问题
+## FAQ
 
-**Q：为什么有些钓鱼网站没被拦截？**
-A：检测以域名特征与黑名单为主，全新注册且无明显仿冒特征的域名可能漏检。欢迎提 Issue，确认后会固化进内置黑名单；订阅源每日更新也会持续补充。
+**Q: Why didn't it catch some phishing site?**
+A: Detection relies on domain traits and blacklists; brand-new domains without obvious impersonation traits may slip through. Open an issue — confirmed domains are hard-coded into the built-in blacklist, and daily feed updates keep filling the gaps.
 
-**Q：为什么正规网站被警告了？**
-A：可能是域名与某品牌过于相似触发了启发式规则。提 Issue 反馈后我们会加入官方域白名单；也可以临时把模式切到「仅标记」避免隐藏。
+**Q: Why was a legitimate site flagged?**
+A: Its domain is likely too similar to some brand, triggering a heuristic rule. Report it via an issue and we'll whitelist the official domain; meanwhile you can switch to "Mark only" mode to avoid hiding.
 
-**Q：百度/搜狗/360 的检测准确吗？**
-A：这三个引擎的跳转链接是服务端 302 重定向，扩展通过页面上展示的域名文字来判定，准确性不受影响；仅当结果连展示域名都没有时才会跳过。
+**Q: Is detection accurate on Baidu/Sogou/360?**
+A: These engines wrap results in server-side 302 redirects, so the extension judges by the domain text displayed on the page — accuracy is unaffected. Only results with no displayed domain at all are skipped.
 
-**Q：支持 Firefox 吗？**
-A：当前为 Chrome MV3 实现，Firefox 需要适配（`browser.*` API 与部分 manifest 差异），欢迎贡献。
+**Q: Firefox support?**
+A: It's currently a Chrome MV3 implementation; Firefox needs adaptation (`browser.*` APIs and some manifest differences). Contributions welcome.
 
-## 免责声明
+## Disclaimer
 
-PhishShield 是辅助防护工具，无法保证拦截所有钓鱼网站，也可能存在误报；访问前请始终核对地址栏域名。涉及资金、账号的操作请务必通过官方渠道核实。
+PhishShield is an auxiliary defense; it cannot guarantee blocking every phishing site and may produce false positives. Always verify the domain in the address bar before visiting, and confirm money- or account-related operations through official channels.
 
-## 许可证
+## License
 
-本项目采用 [MIT 许可证](LICENSE) 开源。
+This project is open-sourced under the [MIT License](LICENSE).
