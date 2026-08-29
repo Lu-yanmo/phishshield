@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>PhishShield 商店截图 mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: #fff; color: #212121;
+  }
+  /* —— Bing 风格头部 —— */
+  .sb {
+    display: flex; align-items: center; gap: 24px;
+    padding: 14px 32px 10px;
+    border-bottom: 1px solid #e6e6e6;
+  }
+  .logo { font-size: 24px; font-weight: 600; }
+  .logo b { color: #008373; }
+  .searchbox {
+    display: flex; align-items: center;
+    width: 560px; height: 44px;
+    border: 1px solid #d6d6d6; border-radius: 22px;
+    padding: 0 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .searchbox input {
+    flex: 1; border: none; outline: none; font-size: 15px;
+  }
+  .searchbox .icon { color: #666; font-size: 16px; }
+  .tabs { padding: 8px 32px 0; font-size: 13px; color: #616161; border-bottom: 1px solid #e6e6e6; }
+  .tabs span { margin-right: 22px; padding-bottom: 8px; }
+  .tabs .on { color: #0067b8; border-bottom: 2px solid #0067b8; font-weight: 600; }
+  /* —— 结果区 —— */
+  .results { max-width: 640px; padding: 22px 32px 40px 170px; }
+  .count { font-size: 12px; color: #616161; margin-bottom: 18px; }
+  .algo { margin-bottom: 28px; }
+  .algo cite { font-size: 13px; color: #1a7a4c; font-style: normal; }
+  .algo h2 { margin: 3px 0 4px; }
+  .algo h2 a { font-size: 19px; color: #1a0dab; text-decoration: none; font-weight: 400; }
+  .algo p { font-size: 14px; color: #444; line-height: 1.55; }
+  .official {
+    display: inline-block; font-size: 11px; color: #1a7a4c;
+    border: 1px solid #a5d6b8; border-radius: 3px; padding: 0 5px; margin-left: 6px;
+    vertical-align: 2px;
+  }
+  /* —— 插件警告条（与 content.css 一致） —— */
+  .bpg-warning {
+    margin: 6px 0 10px; padding: 10px 14px 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(231, 76, 60, 0.45);
+    border-left: 4px solid #e74c3c;
+    background: linear-gradient(135deg, #fef2f2, #fdecea);
+    color: #922b21; font-size: 13px; line-height: 1.6;
+    box-shadow: 0 1px 4px rgba(231, 76, 60, 0.12);
+  }
+  .bpg-warning[data-level="suspicious"] {
+    border-color: rgba(243, 156, 18, 0.45);
+    border-left-color: #f39c12;
+    background: linear-gradient(135deg, #fffbeb, #fef5e7);
+    color: #9a6612;
+    box-shadow: 0 1px 4px rgba(243, 156, 18, 0.12);
+  }
+  .bpg-warning-title { font-weight: 700; letter-spacing: 0.2px; }
+  .bpg-warning-why { margin-top: 2px; word-break: break-all; }
+  .bpg-warning-act { margin-top: 4px; font-size: 12px; opacity: 0.85; }
+</style>
+</head>
+<body>
+  <div class="sb">
+    <div class="logo"><b>Bing</b></div>
+    <div class="searchbox">
+      <input value="deepseek 下载" readonly>
+      <span class="icon">🔍</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <span class="on">搜索</span><span>图片</span><span>视频</span><span>资讯</span><span>地图</span>
+  </div>
+  <div class="results">
+    <div class="count">约 1,240,000 条结果</div>
+
+    <!-- 结果一：正规官网 -->
+    <div class="algo">
+      <cite>www.deepseek.com</cite>
+      <h2><a href="#">DeepSeek | 深度求索官方网站</a><span class="official">官方</span></h2>
+      <p>深度求索（DeepSeek）官方平台，提供 DeepSeek-R1 大模型在线体验与开源模型下载，成立于 2023 年，总部位于杭州。</p>
+    </div>
+
+    <!-- 结果二：钓鱼站，红色危险警告 -->
+    <div class="algo">
+      <div class="bpg-warning">
+        <div class="bpg-warning-title">⛔ 高危钓鱼网站，已为您标记</div>
+        <div class="bpg-warning-why">依据：疑似仿冒「DeepSeek」官网（连字符拼接变体：deepseek-com）；域名使用国内两段式后缀 .com.cn 增强迷惑性（评分 100/100）</div>
+        <div class="bpg-warning-act">提示：请勿在此页面输入账号密码或下载任何文件。</div>
+      </div>
+      <cite>deepseek-com.com.cn</cite>
+      <h2><a href="#">DeepSeek官网下载 - 免费最新版</a></h2>
+      <p>DeepSeek 官方网站下载入口，点击获取最新版安装包，一键安装免费使用。</p>
+    </div>
+
+    <!-- 结果三：可疑站，橙色警告 -->
+    <div class="algo">
+      <div class="bpg-warning" data-level="suspicious">
+        <div class="bpg-warning-title">⚠ 疑似钓鱼网站，请谨慎访问</div>
+        <div class="bpg-warning-why">依据：域名与知名品牌「DeepSeek」高度近似（编辑距离 1）；使用高风险顶级域名 .top（评分 75/100）</div>
+        <div class="bpg-warning-act">提示：若确认为误报，忽略本提示即可；谨慎起见请核对地址栏域名后再访问。</div>
+      </div>
+      <cite>deepseeek.top</cite>
+      <h2><a href="#">DeepSeek 最新版下载 - 官方入口</a></h2>
+      <p>提供 DeepSeek 客户端下载与账号注册服务，高速下载通道。</p>
+    </div>
+  </div>
+</body>
+</html>
