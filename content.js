@@ -357,7 +357,7 @@
       bar.appendChild(title);
       bar.appendChild(why);
       bar.appendChild(act);
-      item.insertBefore(bar, item.firstChild);
+      item.appendChild(bar);
     }
   }
 
