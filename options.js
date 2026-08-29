@@ -61,6 +61,7 @@
     document.getElementById("chkTld").checked = cfg.dangerousTld !== false;
     document.getElementById("chkIp").checked = cfg.ipDomain !== false;
     document.getElementById("chkLure").checked = cfg.lureWords !== false;
+    document.getElementById("chkIcp").checked = cfg.icpCheck !== false;
     document.getElementById("customList").value = cfg.customList || "";
     document.getElementById("sbKey").value = cfg.safeBrowsingKey || "";
     const subs = Array.isArray(cfg.subscriptions) ? cfg.subscriptions : [];
@@ -115,6 +116,7 @@
       dangerousTld: document.getElementById("chkTld").checked,
       ipDomain: document.getElementById("chkIp").checked,
       lureWords: document.getElementById("chkLure").checked,
+      icpCheck: document.getElementById("chkIcp").checked,
       customList: document.getElementById("customList").value,
       safeBrowsingKey: document.getElementById("sbKey").value.trim(),
       subscriptions: collectSubRows()

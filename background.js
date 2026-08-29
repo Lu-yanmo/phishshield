@@ -11,6 +11,7 @@ const CONFIG_KEY = "bpg_config";
 const SUBS_KEY = "bpg_subs";      // { list: "域名\n域名..."（换行分隔字符串，比数组省约 1/3 存储），
                                   //   sources: [{url,name,fetchedAt,count}], lastError, updatedAt }
 const STATS_KEY = "bpg_stats";
+const ICP_CACHE_KEY = "bpg_icp_cache"; // { 注册域: { filed: bool, at: 时间戳 } } 备案查询缓存
 const REFRESH_PERIOD_MIN = 360;   // 每 6 小时自动刷新一次订阅
 
 const DEFAULT_CONFIG = {
@@ -20,6 +21,7 @@ const DEFAULT_CONFIG = {
   dangerousTld: true,
   ipDomain: true,
   lureWords: true,
+  icpCheck: true,           // 备案审查：已备案域名豁免启发式判定（仅发送域名到备案查询服务）
   customList: "",
   subscriptions: [
     {
@@ -115,6 +117,62 @@ async function getSubSet() {
   return subSetCache.set;
 }
 
+// ---------- ICP 备案查询（可选，用于已备案域名白名单豁免） ----------
+// 备案需实名，钓鱼站极少备案；查到备案的域名豁免启发式判定以降低误报。
+// 免费第三方接口稳定性有限：查询失败静默降级（不豁免、不惩罚），不影响本地检测。
+// 缓存策略：已备案 30 天，确认未备案 7 天，失败不缓存。
+const ICP_APIS = [
+  (d) => "https://api.vvhan.com/api/icp?url=" + encodeURIComponent(d),
+  (d) => "https://api.66mz8.com/api/icp?url=" + encodeURIComponent(d)
+];
+
+// 返回 true=已备案 / false=未备案 / null=查询失败或未知格式（不缓存）
+async function fetchIcp(domain) {
+  for (const mk of ICP_APIS) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const resp = await fetch(mk(domain), { signal: controller.signal });
+      clearTimeout(timer);
+      if (!resp.ok) continue;
+      const j = await resp.json();
+      if (j && (j.success === true || j.code === 1 || j.code === 200)) return true;
+      if (j && (j.success === false || j.code === 0 || j.code === 400 || j.code === 404)) return false;
+    } catch (e) { /* 换下一个接口 */ }
+  }
+  return null;
+}
+
+// 批量查询备案状态，返回 { 注册域: true }（仅包含已备案项）
+async function queryIcpHosts(hosts) {
+  if (!Array.isArray(hosts) || hosts.length === 0) return {};
+  const { [ICP_CACHE_KEY]: cache } = await chrome.storage.local.get(ICP_CACHE_KEY);
+  const icpCache = (cache && typeof cache === "object") ? cache : {};
+  const now = Date.now();
+  const filed = {};
+  const todo = [];
+  for (const h of hosts.slice(0, 30)) {
+    const d = String(h || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\d*\./, "");
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) continue; // 跳过 IP 等无法备案的主机
+    const c = icpCache[d];
+    if (c && typeof c.filed === "boolean" && (now - c.at) < (c.filed ? 2592e6 : 6048e5)) {
+      if (c.filed) filed[d] = true;
+      continue;
+    }
+    todo.push(d);
+  }
+  let dirty = false;
+  for (const d of todo) {
+    const r = await fetchIcp(d);
+    if (r === null) continue;
+    icpCache[d] = { filed: r, at: now };
+    dirty = true;
+    if (r) filed[d] = true;
+  }
+  if (dirty) await chrome.storage.local.set({ [ICP_CACHE_KEY]: icpCache });
+  return filed;
+}
+
 // ---------- Google Safe Browsing 查询（可选，需用户配置 API Key） ----------
 // 请求/响应格式参见官方 v4 Lookup API：
 // POST https://safebrowsing.googleapis.com/v4/threatMatches:find?key=xxx
@@ -203,6 +261,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       })();
       return true; // 异步响应
     }
+
+    case "queryIcp":
+      queryIcpHosts(msg.hosts || []).then((filed) => sendResponse({ filed }));
+      return true;
 
     case "getSubStatus":
       chrome.storage.local.get(SUBS_KEY, (d) => {

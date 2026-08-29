@@ -244,10 +244,11 @@ const BPG_SOFTWARE_TARGETS = [
   { name: "微信",                keywords: ["weixin", "wechat"],          official: ["qq.com", "wechat.com"] },
   { name: "QQ",                  keywords: ["qq"],                        official: ["qq.com"] },
   { name: "快压",                keywords: ["kuaizip"],                   official: ["kuaizip.com"] },
-  // 汽水音乐（抖音/字节跳动官方出品）：唯一官方入口 music.douyin.com（注册域 douyin.com）；
+  // 汽水音乐（抖音/字节跳动官方出品）：官方入口 music.douyin.com（注册域 douyin.com）
+  // 与 PC 端官网 qishui.com；
   // 2026-08 实测发现 qissmusic.com.cn / qishuidou.com.cn / cn-qishui.com 等仿冒站经 Bing 传播，
   // qiss 为 qishui 的常见仿冒变体拼写，一并纳入关键词识别（无合法站点以此命名）
-  { name: "汽水音乐",            keywords: ["qishui", "qissmusic"],        official: ["douyin.com"] },
+  { name: "汽水音乐",            keywords: ["qishui", "qissmusic"],        official: ["douyin.com", "qishui.com"] },
 
   // —— 国内常用软件（SEO 投毒高频仿冒对象，2026-08 扩充）——
   { name: "搜狗输入法",          keywords: ["sougousrf", "sougoushurufa"], official: ["sogou.com"] },

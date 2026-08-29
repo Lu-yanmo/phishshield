@@ -23,6 +23,7 @@
     dangerousTld: true,
     ipDomain: true,
     lureWords: true,
+    icpCheck: true,
     customList: ""
   };
 
@@ -287,7 +288,7 @@
   }
 
   // 综合判断：返回 { level, score, reasons, blacklistedFrom }
-  function judge(candidate, customSet, subHits, thresholds) {
+  function judge(candidate, customSet, subHits, thresholds, icpFiled) {
     const bl = checkBlacklists(candidate, customSet, subHits);
     if (bl) {
       return {
@@ -296,6 +297,12 @@
         reasons: [{ weight: 100, key: "bl." + bl.source, params: bl.list ? { list: bl.list } : null }],
         blacklisted: bl.source
       };
+    }
+    // 备案豁免：已完成 ICP 备案的域名（实名认证）几乎不可能是钓鱼站，
+    // 直接放行启发式判定；黑名单/订阅命中在上方已优先处理，不受豁免影响。
+    // 仅已备案豁免、未备案不惩罚，避免误伤未备案的海外正规站点。
+    if (icpFiled && icpFiled[BPG_HEURISTICS.getRegDomain(candidate.hostname)]) {
+      return { level: "safe", score: 0, reasons: [], blacklisted: null };
     }
     // 按设置开关裁剪信号源（通过传参控制）
     const result = BPG_HEURISTICS.runAnalysis({
@@ -406,11 +413,22 @@
       );
       // 订阅黑名单（批量查询）
       const subHits = await querySubList(pending);
+      // 备案审查（批量查询已备案域名，用于豁免启发式判定）
+      let icpFiled = null;
+      if (config.icpCheck !== false) {
+        try {
+          const res = await chrome.runtime.sendMessage({
+            type: "queryIcp",
+            hosts: [...new Set(pending.map((c) => c.hostname))].slice(0, 30)
+          });
+          if (res && res.filed) icpFiled = res.filed;
+        } catch (e) { /* background 不可用时跳过备案审查 */ }
+      }
 
       const beforeMarked = markedCount;
       const beforeHidden = hiddenCount;
       for (const cand of pending) {
-        const verdict = judge(cand, customSet, subHits, thresholds);
+        const verdict = judge(cand, customSet, subHits, thresholds, icpFiled);
         cand.item.dataset.bpgDone = "1";
         renderResult(cand, verdict, config.mode);
       }

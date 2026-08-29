@@ -14,6 +14,10 @@ Local statistics (scan and mark counters) are stored only in your browser local 
 
 When enabled, the extension periodically downloads public phishing-list files (e.g. OpenPhish) to your device. This is a plain file download carrying no search content or browsing history; matching happens entirely offline afterwards.
 
+## ICP filing check (optional, on by default)
+
+When enabled, candidate domain names (e.g. example.com) are sent to a public ICP filing lookup service to check registration status; filed domains are exempted from heuristic warnings to reduce false positives. Only the domain name itself is transmitted - never your search keywords, page content, or browsing history. Results are cached locally. If the lookup service is unavailable, the check is silently skipped and local detection is unaffected. You can turn this off at any time in the extension options.
+
 ## Permissions
 
 - storage: save your settings and local statistics
