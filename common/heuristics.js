@@ -7,6 +7,7 @@
 //   1. 仿冒品牌域名（编辑距离 / 字符混淆 / 前缀后缀扩展 / 子域挂名）
 //   2. 危险 TLD 列表（.top .xyz .tk .ml 等诈骗重灾区）
 //   3. 诱导关键词（login / verify / 客服 / 退款 / 兑奖 ...）
+//      —— 辅助信号：仅在已存在域名级危险信号时加分，正规站的登录/验证页不单独入罪
 //   4. 结构特征（纯 IP 域名、超长域名、punycode 同形字等）
 //   5. 银狐特化：仿冒软件官网/下载站（SEO 投毒，见 brands.js 中清单）
 // 所有规则的分数可叠加，上限 100；默认 70 分判危险、40 分判可疑。
@@ -185,13 +186,16 @@ const BPG_HEURISTICS = (function () {
     };
 
     // ---- 0. 结构异常（开关：ipDomain）----
-    if (o.ipDomain && /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    const isIpHost = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+    const longHost = !/^\d/.test(host) && host.length > 35;
+    const manyHyphens = (host.match(/-/g) || []).length > 2;
+    if (o.ipDomain && isIpHost) {
       setMax(60, "r.ip_domain");
     }
-    if (o.ipDomain && !/^\d/.test(host) && host.length > 35) {
+    if (o.ipDomain && longHost) {
       bump(10, "r.long_domain", { n: host.length });
     }
-    if (o.ipDomain && (host.match(/-/g) || []).length > 2) {
+    if (o.ipDomain && manyHyphens) {
       bump(10, "r.many_hyphens");
     }
     // punycode / 同形字（多字节字符仿冒拉丁字母品牌）
@@ -355,7 +359,8 @@ const BPG_HEURISTICS = (function () {
     }
 
     // ---- 2. 危险 TLD 压制（开关：dangerousTld）----
-    if (o.dangerousTld && DANGEROUS_TLDS.has(tld)) {
+    const tldHit = o.dangerousTld && DANGEROUS_TLDS.has(tld);
+    if (tldHit) {
       if (brandHit) {
         bump(30, "r.tld_brand", { tld });
       } else if (URL_LURE_RE.test(path) || CN_LURE_WORDS.some(w => allText.includes(w))) {
@@ -375,7 +380,13 @@ const BPG_HEURISTICS = (function () {
     }
 
     // ---- 3. 诱导关键词（开关：lureWords）----
-    if (o.lureWords) {
+    // 关键词规则是辅助信号：路径含 login/verify、页面文字含 secure 等
+    // 在正规站点（登录页、结账页、帮助中心）中海量出现，单独出现无法区分
+    // 钓鱼与正常页面（误报重灾区）；仅当已存在域名级危险信号（品牌仿冒 /
+    // 危险 TLD / 结构异常 / 同形字）时才加分，作为组合证据推高定性。
+    const domainSignal = brandHit || tldHit || hasNonAscii ||
+      (o.ipDomain && (isIpHost || longHost || manyHyphens));
+    if (o.lureWords && domainSignal) {
       if (URL_LURE_RE.test(path)) {
         bump(25, "r.url_lure");
       }
